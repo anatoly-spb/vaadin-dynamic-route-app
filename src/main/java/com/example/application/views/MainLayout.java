@@ -18,6 +18,7 @@ import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.router.RouteData;
+import com.vaadin.flow.router.internal.HasUrlParameterFormat;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 
 /**
@@ -25,6 +26,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
  */
 public class MainLayout extends AppLayout {
 
+  
   private static final Logger log = LoggerFactory.getLogger(MainLayout.class);
 
   private H2 viewTitle;
@@ -55,28 +57,34 @@ public class MainLayout extends AppLayout {
     addToDrawer(header, scroller, createFooter());
   }
 
+  private String toPathWithOptionalParameter(String path) {
+    return String.format("%s%s?", path, HasUrlParameterFormat.PARAMETER);
+  }
+  
   private SideNav createNavigation() {
-    
+
     log.info("createNavigation");
     
     SideNav nav = new SideNav();
 
     RouteConfiguration routeConfiguration = RouteConfiguration.forSessionScope();
     routeConfiguration.getAvailableRoutes().stream().forEach(route->{
-      log.info("Available route: {}", route.toString());
+      log.info("Available route: {}", route);
     });
-    if (!routeConfiguration.isPathAvailable("view/test1/create")) {
-      log.info("view/test1/create is not available, register one");
-      routeConfiguration.setRoute("view/test1/create", MyView.class, Arrays.asList(MainLayout.class));
+    String test1 = "view/test1/create";
+    if (!routeConfiguration.isPathAvailable(toPathWithOptionalParameter(test1))) {
+      log.info("{} is not available, set one", test1);
+      routeConfiguration.setRoute(test1, MyView.class, Arrays.asList(MainLayout.class));
     }
-    if (!routeConfiguration.isPathAvailable("view/test2/create")) {
-      log.info("view/test2/create is not available, register one");
-      routeConfiguration.setRoute("view/test2/create", MyView.class, Arrays.asList(MainLayout.class));
+    String test2 = "view/test2/create";
+    if (!routeConfiguration.isPathAvailable(toPathWithOptionalParameter(test2))) {
+      log.info("{} is not available, set one", test2);
+      routeConfiguration.setRoute(test2, MyView.class, Arrays.asList(MainLayout.class));
     }
 
-    nav.addItem(new SideNavItem("Test1", "view/test1/create"));
-    nav.addItem(new SideNavItem("Test2", "view/test2/create"));
-    nav.addItem(new SideNavItem("Welcome", "welcome"));
+    nav.addItem(new SideNavItem("Test1", test1));
+    nav.addItem(new SideNavItem("Test2", test2)); 
+    nav.addItem(new SideNavItem("Welcome", "welcome")); 
 
     return nav;
   }

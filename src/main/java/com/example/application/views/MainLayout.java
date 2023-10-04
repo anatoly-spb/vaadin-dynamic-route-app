@@ -1,7 +1,11 @@
 package com.example.application.views;
 
-import com.example.application.views.about.AboutView;
-import com.example.application.views.helloworld.HelloWorldView;
+import java.util.Arrays;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.html.Footer;
@@ -12,65 +16,85 @@ import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.RouteConfiguration;
+import com.vaadin.flow.router.RouteData;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import org.vaadin.lineawesome.LineAwesomeIcon;
 
 /**
  * The main view is a top-level placeholder for other views.
  */
 public class MainLayout extends AppLayout {
 
-    private H2 viewTitle;
+  private static final Logger log = LoggerFactory.getLogger(MainLayout.class);
 
-    public MainLayout() {
-        setPrimarySection(Section.DRAWER);
-        addDrawerContent();
-        addHeaderContent();
+  private H2 viewTitle;
+
+  public MainLayout() {
+    setPrimarySection(Section.DRAWER);
+    addDrawerContent();
+    addHeaderContent();
+  }
+
+  private void addHeaderContent() {
+    DrawerToggle toggle = new DrawerToggle();
+    toggle.setAriaLabel("Menu toggle");
+ 
+    viewTitle = new H2();
+    viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
+
+    addToNavbar(true, toggle, viewTitle);
+  }
+
+  private void addDrawerContent() {
+    H1 appName = new H1("My App");
+    appName.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
+    Header header = new Header(appName);
+
+    Scroller scroller = new Scroller(createNavigation());
+
+    addToDrawer(header, scroller, createFooter());
+  }
+
+  private SideNav createNavigation() {
+    
+    log.info("createNavigation");
+    
+    SideNav nav = new SideNav();
+
+    RouteConfiguration routeConfiguration = RouteConfiguration.forSessionScope();
+    routeConfiguration.getAvailableRoutes().stream().forEach(route->{
+      log.info("Available route: {}", route.toString());
+    });
+    if (!routeConfiguration.isPathAvailable("view/test1/create")) {
+      log.info("view/test1/create is not available, register one");
+      routeConfiguration.setRoute("view/test1/create", MyView.class, Arrays.asList(MainLayout.class));
+    }
+    if (!routeConfiguration.isPathAvailable("view/test2/create")) {
+      log.info("view/test2/create is not available, register one");
+      routeConfiguration.setRoute("view/test2/create", MyView.class, Arrays.asList(MainLayout.class));
     }
 
-    private void addHeaderContent() {
-        DrawerToggle toggle = new DrawerToggle();
-        toggle.setAriaLabel("Menu toggle");
+    nav.addItem(new SideNavItem("Test1", "view/test1/create"));
+    nav.addItem(new SideNavItem("Test2", "view/test2/create"));
+    nav.addItem(new SideNavItem("Welcome", "welcome"));
 
-        viewTitle = new H2();
-        viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
+    return nav;
+  }
 
-        addToNavbar(true, toggle, viewTitle);
-    }
+  private Footer createFooter() {
+    Footer layout = new Footer();
 
-    private void addDrawerContent() {
-        H1 appName = new H1("My App");
-        appName.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
-        Header header = new Header(appName);
+    return layout;
+  }
 
-        Scroller scroller = new Scroller(createNavigation());
+  @Override
+  protected void afterNavigation() {
+    super.afterNavigation();
+    viewTitle.setText(getCurrentPageTitle());
+  }
 
-        addToDrawer(header, scroller, createFooter());
-    }
-
-    private SideNav createNavigation() {
-        SideNav nav = new SideNav();
-
-        nav.addItem(new SideNavItem("Hello World", HelloWorldView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
-        nav.addItem(new SideNavItem("About", AboutView.class, LineAwesomeIcon.FILE.create()));
-
-        return nav;
-    }
-
-    private Footer createFooter() {
-        Footer layout = new Footer();
-
-        return layout;
-    }
-
-    @Override
-    protected void afterNavigation() {
-        super.afterNavigation();
-        viewTitle.setText(getCurrentPageTitle());
-    }
-
-    private String getCurrentPageTitle() {
-        PageTitle title = getContent().getClass().getAnnotation(PageTitle.class);
-        return title == null ? "" : title.value();
-    }
+  private String getCurrentPageTitle() {
+    PageTitle title = getContent().getClass().getAnnotation(PageTitle.class);
+    return title == null ? "" : title.value();
+  }
 }
